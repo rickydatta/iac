@@ -1,3 +1,3 @@
 # iac
 
-Infrastructure  as code
+Infrastructure as code
