@@ -1,0 +1,14 @@
+steps:
+- name: 'gcr.io/cloud-builders/docker'
+  args: ['build', '--tag=gcr.io/$PROJECT_ID/ansible', '-f', 'Dockerfile',  '--build-arg=PROJECT_ID=$PROJECT_ID','.']
+
+- name: 'gcr.io/$PROJECT_ID/ansible'
+  args: ['--version']
+
+- name: 'gcr.io/$PROJECT_ID/ansible'
+  entrypoint: '/usr/bin/ansible-playbook'
+  args:
+  - playbook.yaml
+
+images:
+- 'gcr.io/$PROJECT_ID/ansible'
