@@ -10,9 +10,6 @@ steps:
   args:
   - playbook.yaml
 
-options:
-  logging: CLOUD_LOGGING_ONLY
-
 images:
 - 'gcr.io/$PROJECT_ID/ansible'
 
