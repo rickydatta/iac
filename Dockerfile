@@ -18,6 +18,9 @@ RUN apk update && apk upgrade && \
     pip install requests && \
     pip install google-auth && \
 	apk add --update ansible && \
+    gcloud components install alpha --quiet \
+    gcloud components install beta --quiet \
+    gcloud components update --quiet\
     rm -rf /var/cache/apk/*
 
 ENTRYPOINT ANSIBLE_STDOUT_CALLBACK=debug /usr/bin/ansible-playbook ansible_project_setup.yaml
