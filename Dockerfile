@@ -1,4 +1,4 @@
-FROM google/cloud-sdk:366.0.0-alpine
+FROM google/cloud-sdk:alpine
 
 ENV DEBIAN_FRONTEND=noninteractive
 
