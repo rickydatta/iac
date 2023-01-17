@@ -1,7 +1,0 @@
-- name: create a bucket
-  google.cloud.gcp_storage_bucket:
-    name: state-storage-bucket
-    project: iac-root-project
-    state: present
-    scopes:
-        https://www.googleapis.com/auth/devstorage.read_writ

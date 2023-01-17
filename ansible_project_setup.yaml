@@ -1,0 +1,259 @@
+- name: Perform One Time Project Setup of GCP Resources for BSC MRF (Manually Triggered)
+  hosts: localhost
+  gather_facts: false
+
+  vars:
+    #
+    # variables
+    #
+
+    # billing acount
+    billing_account: 0127F1-7E8F09-C48028                    # billing account ID
+
+    # service project dev/staging/productoon
+    target_service_project_to_be_spawned: dev-4-bsc-mrf      # dev, staging or production project to be launched
+    target_service_project_id:            dev-4-bsc-mrf      # project id
+    target_service_project_parent_type:   folder             # new project parent is a folder or organization
+    target_service_project_parent_id:     "976520505979"     # new project parent folder or organization id
+
+    #existing shared VPC host project
+    shared_vpc_host_project: host-project-2-bsc-mrf          # use existing host project name
+
+    #authentication information
+    service_account_email: sa-test@iac-root-project.iam.gserviceaccount.com
+    service_account_file: ./service_account_key.json         # service account with key file for the above email
+    project:              iac-root-project                   # IAC project where cloud build is hosted
+    auth_kind:            serviceaccount                     # authentication type
+    # scopes:
+    #   - https://www.googleapis.com/auth/compute
+
+
+    ###############   WARNING: ANY CHANGE BELOW IS DESTRUCTIVE  ###############
+    # desired state is either present or absent
+    # WARNING - CHANGE DESTROYS EVERYTHING
+    desired_state: present                                # WARNING - change this to absent to destroy everything
+
+    # terraform state gcs bucket names
+    # WARNING - CHANGE DESTROYS EVERYTHING
+    production_bucket: production-bsc-mrf-tf-state-bucket # WARNING - name change will destroy everything 
+    staging_bucket:    staging-bsc-mrf-tf-state-bucket
+    dev_bucket:        dev-bsc-mrf-tf-state-bucket
+    ################
+
+  tasks:
+
+  # create terraform state buckets first
+
+   - name: create a terraform state bucket for dev
+     google.cloud.gcp_storage_bucket:
+         state: "{{ desired_state }}"
+         name: "{{ dev_bucket }}"
+         #
+         project: "{{ project }}"
+         auth_kind: "{{ auth_kind }}"
+         service_account_file: "{{ service_account_file }}"
+
+
+
+   - name: create a terraform state bucket for staging
+     google.cloud.gcp_storage_bucket:
+         state: "{{ desired_state }}"
+         name:  "{{ staging_bucket }}"
+         #
+         project: "{{ project }}"
+         auth_kind: "{{ auth_kind }}"
+         service_account_file: "{{ service_account_file }}"
+
+
+
+   - name: create a terraform state bucket for production
+     google.cloud.gcp_storage_bucket:
+         state: "{{ desired_state }}"
+         name: "{{ production_bucket }}"
+         #
+         project: "{{ project }}"
+         auth_kind: "{{ auth_kind }}"
+         service_account_file: "{{ service_account_file }}"
+
+
+
+  # create service project for dev/staging/production
+
+   - name: create the target project where resources will be created (dev/stage/production)
+     google.cloud.gcp_resourcemanager_project:
+         state: "{{ desired_state }}"
+         name: "{{ target_service_project_to_be_spawned }}"
+         id: "{{ target_service_project_id }}"
+         parent:
+           type: "{{ target_service_project_parent_type }}"
+           id: "{{ target_service_project_parent_id }}"
+         # authentication information
+         project: "{{ project }}"
+         auth_kind: "{{ auth_kind }}"
+         service_account_file: "{{ service_account_file }}"
+
+         #Note - bug in ansible. state = absent does not delete project
+         # No way to associate billing account in ansible
+
+
+
+   - name: gcloud auth
+     command: gcloud auth activate-service-account "{{ service_account_email }}"   --key-file="{{ service_account_file }}" --project="{{ target_service_project_to_be_spawned }}"
+  #  - name: gcloud set project
+  #    command: gcloud config set project "{{ project }}"
+  #  - name: gcloud projects create 
+  #    command: gcloud projects create "{{ target_service_project_to_be_spawned }}" --name "{{ target_service_project_to_be_spawned }}" --folder "{{ target_service_project_parent_id }}" --set-as-default
+   - name: gcloud set project
+     command: gcloud config set project "{{ target_service_project_to_be_spawned }}"
+   - name: gcloud enable service
+     command: gcloud services enable serviceusage.googleapis.com  cloudbilling.googleapis.com
+
+
+
+   - name: associate billing account to the project
+     shell: |
+       if gcloud beta billing projects describe "{{ target_service_project_to_be_spawned }}" | grep -q true; then
+         echo "billing is already enabled for this project"
+       else
+         echo "enable billing for this project"
+         gcloud alpha billing projects link "{{ target_service_project_to_be_spawned }}" --billing-account "{{ billing_account }}"
+       fi
+     register: billing_account
+   - name: "billing account output"
+     debug:
+       msg: "{{ billing_account.stdout }}"
+
+
+
+   - name: delete default network 
+     shell: |
+       if gcloud compute networks list | grep -q default; then
+         echo "default network not present, so deleting default network"
+         gcloud compute firewall-rules list --format='value(name)' | while read -r line ;
+         do
+           :
+           RULE_NAME=$line
+           gcloud compute firewall-rules delete "$RULE_NAME" --quiet 
+         done
+         gcloud compute networks delete --quiet default
+       else
+         echo "default network not present"
+       fi
+     register: default_network
+   - name: "default network output"
+     debug:
+       msg: "{{ default_network.stdout }}"
+
+
+
+   - name: attach project to Shared VPC host project 
+     shell: |
+       if gcloud compute shared-vpc associated-projects list "{{ shared_vpc_host_project }}" | grep -q "{{ target_service_project_to_be_spawned }}"; then
+         echo "service project is already attached to the host project"
+       else
+         echo "service project is not attached to the host project, so attaching it now"
+         gcloud compute shared-vpc associated-projects add "{{ target_service_project_to_be_spawned }}"  --host-project "{{ shared_vpc_host_project }}"
+       fi
+     register: service_to_host_project_attach
+   - name: "service to host project attach output"
+     debug:
+       msg: "{{ service_to_host_project_attach.stdout }}"
+
+
+
+
+  # enable service APIs in the project for dev/staging/production
+
+   - name: "Enable Google Cloud API services"
+     google.cloud.gcp_serviceusage_service:
+         state: present                       # we will not disable the APIs ever
+         name: "{{ item }}.googleapis.com"
+         # authentication information
+         project: "{{ target_service_project_to_be_spawned }}"
+         auth_kind: "{{ auth_kind }}"
+         service_account_file: "{{ service_account_file }}"
+     loop:
+        - cloudresourcemanager
+        - artifactregistry
+        - sourcerepo
+        - cloudbuild
+        - run
+        - iam
+        - compute
+        - cloudresourcemanager
+        - containerregistry
+        - cloudbuild
+        - appengine
+        - cloudscheduler
+        - workflows
+        - storage
+        - firestore
+        - bigquery
+        - dataflow
+        - cloudbilling
+
+
+
+
+  ################################################
+  #TODO - change to actual code in the following
+
+  #create cloud storage buckets in the service project 
+
+  #  - name: create a cloud storage bucket for - example
+  #    google.cloud.gcp_storage_bucket:
+  #      state: "{{ desired_state }}"
+  #      name: bsc-mrf-ingestion-1
+  #      #
+  #      project: "{{ target_service_project_to_be_spawned }}"
+  #      auth_kind: "{{ auth_kind }}"
+  #      service_account_file: "{{ service_account_file }}"
+
+
+  #  - name: create a cloud scheduler job
+  #    google.cloud.gcp_cloudscheduler_job:
+  #      state: "{{ desired_state }}"
+  #      name: job
+  #      region: us-central1
+  #      schedule: "*/4 * * * *"
+  #      description: test app engine job
+  #      time_zone: Europe/London
+  #      attempt_deadline: 320s
+  #      app_engine_http_target:
+  #        http_method: POST
+  #        app_engine_routing:
+  #          service: web
+  #          version: prod
+  #          instance: my-instance-001
+  #        relative_uri: "/ping"
+  #      #
+  #      project: "{{ target_service_project_to_be_spawned }}"
+  #      auth_kind: "{{ auth_kind }}"
+  #      service_account_file: "{{ service_account_file }}"
+
+
+  #  - name: create a bigquery dataset
+  #    google.cloud.gcp_bigquery_dataset:
+  #      state: "{{ desired_state }}"
+  #      name: example_dataset
+  #      dataset_reference:
+  #        dataset_id: example_dataset
+  #      #
+  #      project: "{{ target_service_project_to_be_spawned }}"
+  #      auth_kind: "{{ auth_kind }}"
+  #      service_account_file: "{{ service_account_file }}"
+
+  #  - name: create a table
+  #    google.cloud.gcp_bigquery_table:
+  #      state: "{{ desired_state }}"
+  #      name: example_table
+  #      dataset: example_dataset
+  #      table_reference:
+  #        dataset_id:  example_dataset
+  #        project_id: "{{ target_service_project_to_be_spawned }}"
+  #        table_id: example_table
+  #      #
+  #      project: "{{ target_service_project_to_be_spawned }}"
+  #      auth_kind: "{{ auth_kind }}"
+  #      service_account_file: "{{ service_account_file }}"
+
