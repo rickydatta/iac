@@ -17,7 +17,6 @@ ENV GCP_PROJECT=${PROJECT_ID}
 RUN apk update && apk upgrade && \
     apk add --update --no-cache ${BUILD_PACKAGES} && \
     pip install --upgrade pip && \
-    pip install && \
     pip install requests && \
     pip install google-auth && \
 	apk add --update ansible && \
