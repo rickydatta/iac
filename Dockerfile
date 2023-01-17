@@ -20,4 +20,4 @@ RUN apk update && apk upgrade && \
 	apk add --update ansible && \
     rm -rf /var/cache/apk/*
 
-ENTRYPOINT ["ANSIBLE_STDOUT_CALLBACK=debug"  "/usr/bin/ansible-playbook" "ansible_project_setup.yaml"]
+ENTRYPOINT ANSIBLE_STDOUT_CALLBACK=debug /usr/bin/ansible-playbook ansible_project_setup.yaml
