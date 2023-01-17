@@ -4,11 +4,8 @@ COPY service_account_key.json /usr/bin/
 
 ENV GCP_PROJECT=${PROJECT_ID}
 
-
-
-RUN DEBIAN_FRONTEND=noninteractive \
-    apt update && \
-    apt install -y  python3 && \
+RUN DEBIAN_FRONTEND=noninteractive apt update && \
+    DEBIAN_FRONTEND=noninteractive apt install -y  python3 && \
     pip install --upgrade pip --no-cache-dir  && \
     pip install --upgrade ansible  --no-cache-dir \
     pip install --upgrade requests --no-cache-dir&& \
