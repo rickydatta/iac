@@ -25,35 +25,35 @@
         - storage
 
 
-  #   - name: create a terraform state bucket for dev
-  #     google.cloud.gcp_storage_bucket:
-  #       state: "{{ desired_state }}"
-  #       name: "{{ dev_bucket }}"
-  #       #
-  #       project: "{{ terraform_state_project }}"
-  #       auth_kind: "{{ auth_kind }}"
-  #       service_account_file: "{{ service_account_file }}"
-  #     when: create_buckets_with_ansible
+    - name: create a terraform state bucket for dev
+      google.cloud.gcp_storage_bucket:
+        state: "{{ desired_state }}"
+        name: "{{ dev_bucket }}"
+        #
+        project: "{{ terraform_state_project }}"
+        auth_kind: "{{ auth_kind }}"
+        service_account_email: "{{ service_account_email }}"
+      when: create_buckets_with_ansible
 
-  #   - name: create a terraform state bucket for staging
-  #     google.cloud.gcp_storage_bucket:
-  #       state: "{{ desired_state }}"
-  #       name: "{{ staging_bucket }}"
-  #       #
-  #       project: "{{ terraform_state_project }}"
-  #       auth_kind: "{{ auth_kind }}"
-  #       service_account_file: "{{ service_account_file }}"
-  #     when: create_buckets_with_ansible
+    - name: create a terraform state bucket for staging
+      google.cloud.gcp_storage_bucket:
+        state: "{{ desired_state }}"
+        name: "{{ staging_bucket }}"
+        #
+        project: "{{ terraform_state_project }}"
+        auth_kind: "{{ auth_kind }}"
+        service_account_email: "{{ service_account_email }}"
+      when: create_buckets_with_ansible
 
-  #   - name: create a terraform state bucket for production
-  #     google.cloud.gcp_storage_bucket:
-  #       state: "{{ desired_state }}"
-  #       name: "{{ production_bucket }}"
-  #       #
-  #       project: "{{ terraform_state_project }}"
-  #       auth_kind: "{{ auth_kind }}"
-  #       service_account_file: "{{ service_account_file }}"
-  #     when: create_buckets_with_ansible
+    - name: create a terraform state bucket for production
+      google.cloud.gcp_storage_bucket:
+        state: "{{ desired_state }}"
+        name: "{{ production_bucket }}"
+        #
+        project: "{{ terraform_state_project }}"
+        auth_kind: "{{ auth_kind }}"
+        service_account_email: "{{ service_account_email }}"
+      when: create_buckets_with_ansible
 
   #   ###########   End Section 1 ###########
 
