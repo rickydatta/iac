@@ -4,6 +4,10 @@ steps:
 
 - name: 'gcr.io/$PROJECT_ID/ansible-project-setup'
 
+
+options:
+  logging: CLOUD_LOGGING_ONLY
+
 images:
 - 'gcr.io/$PROJECT_ID/ansible-project-setup'
 
