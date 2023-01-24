@@ -13,47 +13,46 @@
 
     # enable service APIs in the project for terraform state project;
 
-    - name: "Enable Google Cloud API services"
-      google.cloud.gcp_serviceusage_service:
-        state: present
-        name: "{{ item }}.googleapis.com"
-        # authentication information
-        project: "{{ terraform_state_project }}"
-        auth_kind: "{{ auth_kind }}"
-        service_account_email: "{{ service_account_email }}"
-      loop:
-        - storage
+  - name: "Enable Google Cloud API services"
+    google.cloud.gcp_serviceusage_service:
+      state: present
+      name: "{{ item }}.googleapis.com"
+      # authentication information
+      project: "{{ terraform_state_project }}"
+      auth_kind: "{{ auth_kind }}"
+      service_account_email: "{{ service_account_email }}"
+    loop:
+      - storage
 
+  - name: create a terraform state bucket for dev
+    google.cloud.gcp_storage_bucket:
+      state: "{{ desired_state }}"
+      name: "{{ dev_bucket }}"
+      #
+      project: "{{ terraform_state_project }}"
+      auth_kind: "{{ auth_kind }}"
+      service_account_email: "{{ service_account_email }}"
+    when: create_buckets_with_ansible
 
-    - name: create a terraform state bucket for dev
-      google.cloud.gcp_storage_bucket:
-        state: "{{ desired_state }}"
-        name: "{{ dev_bucket }}"
-        #
-        project: "{{ terraform_state_project }}"
-        auth_kind: "{{ auth_kind }}"
-        service_account_email: "{{ service_account_email }}"
-      when: create_buckets_with_ansible
+  - name: create a terraform state bucket for staging
+    google.cloud.gcp_storage_bucket:
+      state: "{{ desired_state }}"
+      name: "{{ staging_bucket }}"
+      #
+      project: "{{ terraform_state_project }}"
+      auth_kind: "{{ auth_kind }}"
+      service_account_email: "{{ service_account_email }}"
+    when: create_buckets_with_ansible
 
-    - name: create a terraform state bucket for staging
-      google.cloud.gcp_storage_bucket:
-        state: "{{ desired_state }}"
-        name: "{{ staging_bucket }}"
-        #
-        project: "{{ terraform_state_project }}"
-        auth_kind: "{{ auth_kind }}"
-        service_account_email: "{{ service_account_email }}"
-      when: create_buckets_with_ansible
-
-    - name: create a terraform state bucket for production
-      google.cloud.gcp_storage_bucket:
-        state: "{{ desired_state }}"
-        name: "{{ production_bucket }}"
-        #
-        project: "{{ terraform_state_project }}"
-        auth_kind: "{{ auth_kind }}"
-        service_account_email: "{{ service_account_email }}"
-      when: create_buckets_with_ansible
+  - name: create a terraform state bucket for production
+    google.cloud.gcp_storage_bucket:
+      state: "{{ desired_state }}"
+      name: "{{ production_bucket }}"
+      #
+      project: "{{ terraform_state_project }}"
+      auth_kind: "{{ auth_kind }}"
+      service_account_email: "{{ service_account_email }}"
+    when: create_buckets_with_ansible
 
   #   ###########   End Section 1 ###########
 
@@ -61,448 +60,448 @@
 
   #   ###########   Section 2 (alternative to section 1) ###########
 
-    # - name: gcloud auth
-    #   command: gcloud auth activate-service-account "{{ service_account_email }}"   --key-file="{{ service_account_file }}" --project="{{ terraform_state_project }}"
-    #   when: not create_buckets_with_ansible
+  - name: gcloud auth
+    command: gcloud auth activate-service-account "{{ service_account_email }}"   --key-file="{{ service_account_file }}" --project="{{ terraform_state_project }}"
+    when: not create_buckets_with_ansible
 
-    - name: gcloud set project
-      command: gcloud config set project "{{ terraform_state_project }}"
-      when: not create_buckets_with_ansible
+  - name: gcloud set project
+    command: gcloud config set project "{{ terraform_state_project }}"
+    when: not create_buckets_with_ansible
 
   # create buckets for terraform state
 
-    - name: create storage bucket with gcloud cli (when create_buckets_with_ansible = false )
-      shell: |
-        if gcloud storage ls | grep -q "{{ item }}"; then
+  - name: create storage bucket with gcloud cli (when create_buckets_with_ansible = false )
+    shell: |
+      if gcloud storage ls | grep -q "{{ item }}"; then
 
-          echo "bucket "gs://{{ item }}" is already present, so skipping this step"
+        echo "bucket "gs://{{ item }}" is already present, so skipping this step"
 
-        else
+      else
 
-          echo "bucket "gs://{{ item }}" is not present, so creating it"  
-          gcloud storage buckets create "gs://{{ item }}" --project="{{ terraform_state_project }}" --location="{{ bucket_location }}" --uniform-bucket-level-access
+        echo "bucket "gs://{{ item }}" is not present, so creating it"  
+        gcloud storage buckets create "gs://{{ item }}" --project="{{ terraform_state_project }}" --location="{{ bucket_location }}" --uniform-bucket-level-access
 
-        fi
-      when: (not create_buckets_with_ansible) and (desired_state == 'present')
-      register: buckets_output
-      loop:
-        - "{{ dev_bucket }}"
-        - "{{ staging_bucket }}"
-        - "{{ production_bucket }}"
+      fi
+    when: (not create_buckets_with_ansible) and (desired_state == 'present')
+    register: buckets_output
+    loop:
+      - "{{ dev_bucket }}"
+      - "{{ staging_bucket }}"
+      - "{{ production_bucket }}"
 
-    - name: "create storage bucket output"
-      debug:
-        msg: "\n===== output:\n{{ item.stdout_lines|join('\n') }} \n==== \n"
-      loop: "{{ buckets_output.results }}"
-      when: (not create_buckets_with_ansible) and (desired_state == 'present')
+  - name: "create storage bucket output"
+    debug:
+      msg: "\n===== output:\n{{ item.stdout_lines|join('\n') }} \n==== \n"
+    loop: "{{ buckets_output.results }}"
+    when: (not create_buckets_with_ansible) and (desired_state == 'present')
 
 
   # delete buckets for terraform state
 
-    - name: delete storage bucket with gcloud cli (when create_buckets_with_ansible = false )
-      shell: |
-        if gcloud storage ls | grep -q "{{ item }}"; then
+  - name: delete storage bucket with gcloud cli (when create_buckets_with_ansible = false )
+    shell: |
+      if gcloud storage ls | grep -q "{{ item }}"; then
 
-          echo "bucket "gs://{{ item }}" is present, so deleting it"
-          gcloud storage rm --recursive "gs://{{ item }}"
+        echo "bucket "gs://{{ item }}" is present, so deleting it"
+        gcloud storage rm --recursive "gs://{{ item }}"
 
-        else
+      else
 
-          echo "bucket "gs://{{ item }}" is not present"  
+        echo "bucket "gs://{{ item }}" is not present"  
 
-        fi
-      when: (not create_buckets_with_ansible) and (desired_state == 'absent')
-      register: buckets_output
-      loop:
-        - "{{ dev_bucket }}"
-        - "{{ staging_bucket }}"
-        - "{{ production_bucket }}"
+      fi
+    when: (not create_buckets_with_ansible) and (desired_state == 'absent')
+    register: buckets_output
+    loop:
+      - "{{ dev_bucket }}"
+      - "{{ staging_bucket }}"
+      - "{{ production_bucket }}"
 
-    - name: "delete storage bucket output"
-      debug:
-        msg: "\n===== output:\n{{ item.stdout_lines|join('\n') }} \n==== \n"
-      loop: "{{ buckets_output.results }}"
-      when: (not create_buckets_with_ansible) and (desired_state == 'absent')
+  - name: "delete storage bucket output"
+    debug:
+      msg: "\n===== output:\n{{ item.stdout_lines|join('\n') }} \n==== \n"
+    loop: "{{ buckets_output.results }}"
+    when: (not create_buckets_with_ansible) and (desired_state == 'absent')
 
     # ###########  End Section 2 ###########
 
 
 
 
-    # ###########  Section 3 ###########
-
-    # create folder
-
-    # assume that root folder is already created. Usually ops
-
-
-    #  create after root folder
-    - name: create folder after_root # ususally ops/mrf
-      shell: |
-        if gcloud resource-manager folders list --folder="{{ root_folder_id }}" | grep -q "{{ after_root_folder }}"; then
-          echo "folder "{{ after_root_folder }}" is present, so skipping it"
-        else
-          echo "folder "{{ after_root_folder }}" is not present, so creating it"
-          gcloud resource-manager folders create --display-name="{{ after_root_folder }}" --folder="{{ root_folder_id }}"
-        fi
-      register: root_folder_output
-      when: (desired_state == 'present')
-
-    - name: "root_folder_output output"
-      debug:
-        msg: "\n===== output:\n{{ root_folder_output.stdout }} \n==== \n"
-      when: (desired_state == 'present')
+  # ###########  Section 3 ###########
+
+  # create folder
+
+  # assume that root folder is already created. Usually ops
+
+
+  #  create after root folder
+  - name: create folder after_root # ususally ops/mrf
+    shell: |
+      if gcloud resource-manager folders list --folder="{{ root_folder_id }}" | grep -q "{{ after_root_folder }}"; then
+        echo "folder "{{ after_root_folder }}" is present, so skipping it"
+      else
+        echo "folder "{{ after_root_folder }}" is not present, so creating it"
+        gcloud resource-manager folders create --display-name="{{ after_root_folder }}" --folder="{{ root_folder_id }}"
+      fi
+    register: root_folder_output
+    when: (desired_state == 'present')
+
+  - name: "root_folder_output output"
+    debug:
+      msg: "\n===== output:\n{{ root_folder_output.stdout }} \n==== \n"
+    when: (desired_state == 'present')
 
-    # create project parent folder
-
-    - name: create folder project parent folder # ususally ops/mrf/mrf-dev
-      shell: |
-        FID=$(gcloud resource-manager folders list --folder={{ root_folder_id }} --filter="display_name:{{after_root_folder}}" --format="value(ID)")
-        echo "folder name={{after_root_folder}}  id=$FID"
-        if gcloud resource-manager folders list --folder=$FID | grep -q "{{ parent_folder }}"; then
-          echo "folder "{{ parent_folder }}" is present, so skipping it"
-        else
-          echo "folder "{{ parent_folder }}" is not present, so creating it"
-          gcloud resource-manager folders create --display-name="{{ parent_folder }}" --folder=$FID
-        fi
-      register: parent_folder_output
-      when: (desired_state == 'present')
-
-    - name: "project parent folder output"
-      debug:
-        msg: "\n===== output:\n{{  parent_folder_output.stdout }} \n==== \n"
-      when: (desired_state == 'present')
-
-
-    # ###########  End Section 3 ###########
-
-
-    # ###########  Section 4 ###########
-
-
-    # create target project in Ansible module is not possible as folder id has be extracted at run time
-
-    # - name: create the target project where resources will be created (dev/stage/production)
-    #   google.cloud.gcp_resourcemanager_project:
-    #     state: "{{ desired_state }}"
-    #     name: "{{ target_service_project_to_be_spawned }}"
-    #     id: "{{ target_service_project_id }}"
-    #     parent:
-    #       type: "{{ target_service_project_parent_type }}"
-    #       id: "{{ target_service_project_parent_id }}"
-    #     # authentication information
-    #     project: "{{ project }}"
-    #     auth_kind: "{{ auth_kind }}"
-    #     service_account_email: "{{ service_account_email }}"
-
-
-    # create projects
-
-    - name: create projects # ususally ops/mrf/mrf-dev/prj-npn-ops-mrf-dev-gcs ...
-      shell: |
-        echo "folder name={{ root_folder }}  id={{ root_folder_id }}"
-        AFTER_ROOT_ID=$(gcloud resource-manager folders list --folder={{ root_folder_id }} --filter="display_name:{{ after_root_folder }}" --format="value(ID)")
-        echo "folder name={{ after_root_folder }}  id=$AFTER_ROOT_ID"
-
-        PARENT_ID=$(gcloud resource-manager folders list --folder=$AFTER_ROOT_ID --filter="display_name:{{ parent_folder }}" --format="value(ID)")
-        echo "folder name={{ parent_folder }}  id=$PARENT_ID"
-
-        if gcloud projects list --filter "parent.id=$PARENT_ID AND  parent.type=folder" | grep -q "{{ target_service_project_bq_name }}"; then
-          echo "project "{{ target_service_project_bq_name }}" is present, so skipping it"
-        else
-          echo "project "{{ target_service_project_bq_name }}" is not present, so creating it"
-          gcloud projects create "{{ target_service_project_bq_id }}" --name="{{ target_service_project_bq_name }}" --folder=$PARENT_ID
-        fi
-
-        if gcloud projects list --filter "parent.id=$PARENT_ID AND  parent.type=folder"  | grep -q "{{ target_service_project_gcs_name }}"; then
-          echo "project "{{ target_service_project_gcs_name }}" is present, so skipping it"
-        else
-          echo "project "{{ target_service_project_gcs_name }}" is not present, so creating it"
-          gcloud projects create "{{ target_service_project_gcs_id }}" --name="{{ target_service_project_gcs_name }}" --folder=$PARENT_ID
-        fi
-
-        if gcloud projects list --filter "parent.id=$PARENT_ID AND  parent.type=folder"  | grep -q "{{ target_service_project_svcs_name }}"; then
-          echo "project "{{ target_service_project_svcs_name }}" is present, so skipping it"
-        else
-          echo "project "{{ target_service_project_svcs_name }}" is not present, so creating it"
-          gcloud projects create "{{ target_service_project_svcs_id }}" --name="{{ target_service_project_svcs_name }}" --folder=$PARENT_ID
-        fi
-      register: create_projects_output
-      when: (desired_state == 'present')      
-
-    - name: "create project output"
-      debug:
-        msg: "{{ create_projects_output.stdout_lines|join('\n') }}"
-      when: (desired_state == 'present')
-
-    # ###########  End Section 4 ###########
-
-
-
-    # ###########  Section 5 ###########      
-
-    # delete projects (if desired state is absent)
-
-    - name: delete projects # ususally ops/mrf/mrf-dev/prj-npn-ops-mrf-dev-gcs ...
-      shell: |
-        echo "folder name={{ root_folder }}  id={{ root_folder_id }}"
-        AFTER_ROOT_ID=$(gcloud resource-manager folders list --folder={{ root_folder_id }} --filter="display_name:{{ after_root_folder }}" --format="value(ID)")
-        echo "folder name={{ after_root_folder }}  id=$AFTER_ROOT_ID"
-
-        PARENT_ID=$(gcloud resource-manager folders list --folder=$AFTER_ROOT_ID --filter="display_name:{{ parent_folder }}" --format="value(ID)")
-        echo "folder name={{ parent_folder }}  id=$PARENT_ID"
-
-        if gcloud projects list --filter "parent.id=$PARENT_ID AND  parent.type=folder" | grep -q "{{ target_service_project_bq_name }}"; then
-          echo "project "{{ target_service_project_bq_name }}" is present, so deleting it"
-          gcloud projects delete "{{ target_service_project_bq_id }}"
-        else
-          echo "project "{{ target_service_project_bq_name }}" is not present"
-        fi
-
-        if gcloud projects list --filter "parent.id=$PARENT_ID AND  parent.type=folder"  | grep -q "{{ target_service_project_gcs_name }}"; then
-          echo "project "{{ target_service_project_gcs_name }}" is present, so deleting it"
-          gcloud projects delete "{{ target_service_project_gcs_id }}"
-        else
-          echo "project "{{ target_service_project_gcs_name }}" is not present"
-        fi
-
-        if gcloud projects list --filter "parent.id=$PARENT_ID AND  parent.type=folder"  | grep -q "{{ target_service_project_svcs_name }}"; then
-          echo "project "{{ target_service_project_svcs_name }}" is present, so deleting it"
-          gcloud projects delete "{{ target_service_project_svcs_id }}"
-        else
-          echo "project "{{ target_service_project_svcs_name }}" is not present"
-        fi
-      register: delete_projects_output
-      when: (desired_state == 'absent')      
-
-    - name: "delete project output"
-      debug:
-        msg: "{{ delete_projects_output.stdout_lines|join('\n') }}"
-      when: (desired_state == 'absent')
-
-    # ###########  End Section 5 ###########
-
-
-
-    # ###########  Section 6 ###########
-
-    - name: set project billing acount
-      shell: |
-        gcloud auth activate-service-account "{{ service_account_email }}"   --key-file="{{ service_account_file }}" --project="{{ item }}"
-        gcloud config set project "{{ item }}"
-
-        echo "project id {{ item }}"
-        echo "billing acct {{ billing_account }}"
-
-        if gcloud beta billing projects describe "{{ item }}" | grep -q true; then
-          echo "billing is already enabled for this project"
-        else
-          echo "billing for this project is not setup, setting it up"
-          gcloud alpha billing projects link "{{ item }}" --billing-account "{{ billing_account }}"
-        fi
-      register: billing_account
-      when: (desired_state == 'present')
-      with_items:
-        - "{{ target_service_project_bq_id }}"
-        #- "{{ target_service_project_gcs_id }}"
-        #- "{{ target_service_project_svcs_id }}"
-
-
-    - name: "billing account output"
-      debug:
-        msg: "\n===== output:\n{{  item.stdout_lines|join('\n') }} \n==== \n"
-      when: (desired_state == 'present')
-      with_items: "{{ billing_account.results }}"
-
-
-
-    # - name: enable services
-    #   shell: |
-    #     gcloud auth activate-service-account "{{ service_account_email }}"   --key-file="{{ service_account_file }}" --project="{{ item }}"
-    #     gcloud config set project "{{ item }}"
-
-    #     gcloud services enable appengine.googleapis.com
-    #     gcloud services enable artifactregistry.googleapis.com
-    #     gcloud services enable bigquery.googleapis.com
-    #     gcloud services enable bigquerystorage.googleapis.com
-    #     gcloud services enable cloudapis.googleapis.com
-    #     gcloud services enable cloudbilling.googleapis.com
-    #     gcloud services enable cloudbuild.googleapis.com
-    #     gcloud services enable cloudbuild.googleapis.com
-    #     gcloud services enable clouddebugger.googleapis.com
-    #     gcloud services enable cloudfunctions.googleapis.com
-    #     gcloud services enable cloudresourcemanager.googleapis.com
-    #     gcloud services enable cloudresourcemanager.googleapis.com
-    #     gcloud services enable cloudscheduler.googleapis.com
-    #     gcloud services enable cloudtrace.googleapis.com
-    #     gcloud services enable compute.googleapis.com
-    #     gcloud services enable containerregistry.googleapis.com
-    #     gcloud services enable dataflow.googleapis.com
-    #     gcloud services enable firestore.googleapis.com
-    #     gcloud services enable iam.googleapis.com
-    #     gcloud services enable logging.googleapis.com
-    #     gcloud services enable monitoring.googleapis.com
-    #     gcloud services enable pubsub.googleapis.com
-    #     gcloud services enable run.googleapis.com
-    #     gcloud services enable secretmanager.googleapis.com
-    #     gcloud services enable servicemanagement.googleapis.com
-    #     gcloud services enable serviceusage.googleapis.com
-    #     gcloud services enable sourcerepo.googleapis.com
-    #     gcloud services enable storage-api.googleapis.com
-    #     gcloud services enable storage-component.googleapis.com
-    #     gcloud services enable storage.googleapis.com
-    #     gcloud services enable workflows.googleapis.com
-    #   when: (desired_state == 'present')
-    #   with_items:
-    #     - "{{ target_service_project_bq_id }}"
-    #     # - "{{ target_service_project_gcs_id }}"
-    #     # - "{{ target_service_project_svcs_id }}"
-    #   register: enable_services
-
-
-    # - name: "enable services output"
-    #   debug:
-    #     msg: "\n===== output:\n{{  item.stdout_lines|join('\n') }} \n==== \n"
-    #   when: (desired_state == 'present')
-    #   with_items: "{{ enable_services.results }}"
-
-
-    - name: "Enable Google Cloud API services"
-      google.cloud.gcp_serviceusage_service:
-        state: present
-        name: "{{ item[1] }}.googleapis.com"
-        # authentication information
-        project: "{{ item[0] }}"
-        auth_kind: "{{ auth_kind }}"
-        service_account_email: "{{ service_account_email }}"
-      with_nested:
-        - ["{{ target_service_project_bq_id }}"
-          #  , "{{ target_service_project_gcs_id }}"
-          #  , "{{ target_service_project_svcs_id }}"
-          ]
-        - [appengine, artifactregistry, bigquery, bigquerystorage, cloudapis, cloudbilling, cloudbuild, cloudbuild, clouddebugger, cloudfunctions, cloudresourcemanager, cloudresourcemanager, 
-          cloudscheduler, cloudtrace, compute, containerregistry, dataflow, firestore, iam, logging, monitoring, pubsub, run, secretmanager, servicemanagement,
-          serviceusage, sourcerepo, storage-api, storage-component, storage, workflows]
-
-
-    - name: delete default network
-      shell: |
-        gcloud auth activate-service-account "{{ service_account_email }}"   --key-file="{{ service_account_file }}" --project="{{ item }}"
-        gcloud config set project "{{ item }}"
-
-        if gcloud compute networks list | grep -q default; then
-          echo "default network is present, so deleting default network"
-          gcloud compute firewall-rules list --format='value(name)' | while read -r line ;
-          do
-            :
-            RULE_NAME=$line
-            gcloud compute firewall-rules delete "$RULE_NAME" --quiet 
-          done
-          gcloud compute networks delete --quiet default
-        else
-          echo "default network not present"
-        fi
-      register: default_network
-      with_items:
-        - "{{ target_service_project_bq_id }}"
-        #- "{{ target_service_project_gcs_id }}"
-        #- "{{ target_service_project_svcs_id }}"
-
-    - name: "default network output"
-      debug:
-        msg: "\n===== output:\n{{  item.stdout_lines|join('\n') }} \n==== \n"
-      when: (desired_state == 'present')
-      with_items: "{{ default_network.results }}"
-
-
-
-    - name: attach project to Shared VPC host project
-      shell: |
-        gcloud auth activate-service-account "{{ service_account_email }}"   --key-file="{{ service_account_file }}" --project="{{ item }}"
-        gcloud config set project "{{ item }}"
-
-        if gcloud compute shared-vpc associated-projects list "{{ shared_vpc_host_project }}" | grep -q "{{ item }}"; then
-          echo "service project is already attached to the host project"
-        else
-          echo "service project is not attached to the host project, so attaching it now"
-          gcloud compute shared-vpc associated-projects add "{{ item }}"  --host-project "{{ shared_vpc_host_project }}"
-        fi
-      register: service_to_host_project_attach
-      with_items:
-        - "{{ target_service_project_bq_id }}"
-        #- "{{ target_service_project_gcs_id }}"
-        #- "{{ target_service_project_svcs_id }}"
-
-    - name: "service to host project attach output"
-      debug:
-        msg: "\n===== output:\n{{  item.stdout_lines|join('\n') }} \n==== \n"
-      when: (desired_state == 'present')
-      with_items: "{{ service_to_host_project_attach.results }}"
-    
-    # ###########  End Section 6 ###########    
-    
-    
-    
-    
-    
-    
-    
-  ################################################
-  #TODO - change to actual code in the following
-
-  #create cloud storage buckets in the service project
-
-  #  - name: create a cloud storage bucket for - example
-  #    google.cloud.gcp_storage_bucket:
-  #      state: "{{ desired_state }}"
-  #      name: bsc-mrf-ingestion-1
-  #      #
-  #      project: "{{ target_service_project_to_be_spawned }}"
-  #      auth_kind: "{{ auth_kind }}"
-  #      service_account_email: "{{ service_account_email }}"
-
-  #  - name: create a cloud scheduler job
-  #    google.cloud.gcp_cloudscheduler_job:
-  #      state: "{{ desired_state }}"
-  #      name: job
-  #      region: us-central1
-  #      schedule: "*/4 * * * *"
-  #      description: test app engine job
-  #      time_zone: Europe/London
-  #      attempt_deadline: 320s
-  #      app_engine_http_target:
-  #        http_method: POST
-  #        app_engine_routing:
-  #          service: web
-  #          version: prod
-  #          instance: my-instance-001
-  #        relative_uri: "/ping"
-  #      #
-  #      project: "{{ target_service_project_to_be_spawned }}"
-  #      auth_kind: "{{ auth_kind }}"
-  #      service_account_email: "{{ service_account_email }}"
-
-  #  - name: create a bigquery dataset
-  #    google.cloud.gcp_bigquery_dataset:
-  #      state: "{{ desired_state }}"
-  #      name: example_dataset
-  #      dataset_reference:
-  #        dataset_id: example_dataset
-  #      #
-  #      project: "{{ target_service_project_to_be_spawned }}"
-  #      auth_kind: "{{ auth_kind }}"
-  #      service_account_email: "{{ service_account_email }}"
-
-  #  - name: create a table
-  #    google.cloud.gcp_bigquery_table:
-  #      state: "{{ desired_state }}"
-  #      name: example_table
-  #      dataset: example_dataset
-  #      table_reference:
-  #        dataset_id:  example_dataset
-  #        project_id: "{{ target_service_project_to_be_spawned }}"
-  #        table_id: example_table
-  #      #
-  #      project: "{{ target_service_project_to_be_spawned }}"
-  #      auth_kind: "{{ auth_kind }}"
-  #      service_account_email: "{{ service_account_email }}"
+  # create project parent folder
+
+  - name: create folder project parent folder # ususally ops/mrf/mrf-dev
+    shell: |
+      FID=$(gcloud resource-manager folders list --folder={{ root_folder_id }} --filter="display_name:{{after_root_folder}}" --format="value(ID)")
+      echo "folder name={{after_root_folder}}  id=$FID"
+      if gcloud resource-manager folders list --folder=$FID | grep -q "{{ parent_folder }}"; then
+        echo "folder "{{ parent_folder }}" is present, so skipping it"
+      else
+        echo "folder "{{ parent_folder }}" is not present, so creating it"
+        gcloud resource-manager folders create --display-name="{{ parent_folder }}" --folder=$FID
+      fi
+    register: parent_folder_output
+    when: (desired_state == 'present')
+
+  - name: "project parent folder output"
+    debug:
+      msg: "\n===== output:\n{{  parent_folder_output.stdout }} \n==== \n"
+    when: (desired_state == 'present')
+
+
+  # ###########  End Section 3 ###########
+
+
+  # ###########  Section 4 ###########
+
+
+  # create target project in Ansible module is not possible as folder id has be extracted at run time
+
+  # - name: create the target project where resources will be created (dev/stage/production)
+  #   google.cloud.gcp_resourcemanager_project:
+  #     state: "{{ desired_state }}"
+  #     name: "{{ target_service_project_to_be_spawned }}"
+  #     id: "{{ target_service_project_id }}"
+  #     parent:
+  #       type: "{{ target_service_project_parent_type }}"
+  #       id: "{{ target_service_project_parent_id }}"
+  #     # authentication information
+  #     project: "{{ project }}"
+  #     auth_kind: "{{ auth_kind }}"
+  #     service_account_email: "{{ service_account_email }}"
+
+
+  # create projects
+
+  - name: create projects # ususally ops/mrf/mrf-dev/prj-npn-ops-mrf-dev-gcs ...
+    shell: |
+      echo "folder name={{ root_folder }}  id={{ root_folder_id }}"
+      AFTER_ROOT_ID=$(gcloud resource-manager folders list --folder={{ root_folder_id }} --filter="display_name:{{ after_root_folder }}" --format="value(ID)")
+      echo "folder name={{ after_root_folder }}  id=$AFTER_ROOT_ID"
+
+      PARENT_ID=$(gcloud resource-manager folders list --folder=$AFTER_ROOT_ID --filter="display_name:{{ parent_folder }}" --format="value(ID)")
+      echo "folder name={{ parent_folder }}  id=$PARENT_ID"
+
+      if gcloud projects list --filter "parent.id=$PARENT_ID AND  parent.type=folder" | grep -q "{{ target_service_project_bq_name }}"; then
+        echo "project "{{ target_service_project_bq_name }}" is present, so skipping it"
+      else
+        echo "project "{{ target_service_project_bq_name }}" is not present, so creating it"
+        gcloud projects create "{{ target_service_project_bq_id }}" --name="{{ target_service_project_bq_name }}" --folder=$PARENT_ID
+      fi
+
+      if gcloud projects list --filter "parent.id=$PARENT_ID AND  parent.type=folder"  | grep -q "{{ target_service_project_gcs_name }}"; then
+        echo "project "{{ target_service_project_gcs_name }}" is present, so skipping it"
+      else
+        echo "project "{{ target_service_project_gcs_name }}" is not present, so creating it"
+        gcloud projects create "{{ target_service_project_gcs_id }}" --name="{{ target_service_project_gcs_name }}" --folder=$PARENT_ID
+      fi
+
+      if gcloud projects list --filter "parent.id=$PARENT_ID AND  parent.type=folder"  | grep -q "{{ target_service_project_svcs_name }}"; then
+        echo "project "{{ target_service_project_svcs_name }}" is present, so skipping it"
+      else
+        echo "project "{{ target_service_project_svcs_name }}" is not present, so creating it"
+        gcloud projects create "{{ target_service_project_svcs_id }}" --name="{{ target_service_project_svcs_name }}" --folder=$PARENT_ID
+      fi
+    register: create_projects_output
+    when: (desired_state == 'present')      
+
+  - name: "create project output"
+    debug:
+      msg: "{{ create_projects_output.stdout_lines|join('\n') }}"
+    when: (desired_state == 'present')
+
+# ###########  End Section 4 ###########
+
+
+
+  # ###########  Section 5 ###########      
+
+  # delete projects (if desired state is absent)
+
+  - name: delete projects # ususally ops/mrf/mrf-dev/prj-npn-ops-mrf-dev-gcs ...
+    shell: |
+      echo "folder name={{ root_folder }}  id={{ root_folder_id }}"
+      AFTER_ROOT_ID=$(gcloud resource-manager folders list --folder={{ root_folder_id }} --filter="display_name:{{ after_root_folder }}" --format="value(ID)")
+      echo "folder name={{ after_root_folder }}  id=$AFTER_ROOT_ID"
+
+      PARENT_ID=$(gcloud resource-manager folders list --folder=$AFTER_ROOT_ID --filter="display_name:{{ parent_folder }}" --format="value(ID)")
+      echo "folder name={{ parent_folder }}  id=$PARENT_ID"
+
+      if gcloud projects list --filter "parent.id=$PARENT_ID AND  parent.type=folder" | grep -q "{{ target_service_project_bq_name }}"; then
+        echo "project "{{ target_service_project_bq_name }}" is present, so deleting it"
+        gcloud projects delete "{{ target_service_project_bq_id }}"
+      else
+        echo "project "{{ target_service_project_bq_name }}" is not present"
+      fi
+
+      if gcloud projects list --filter "parent.id=$PARENT_ID AND  parent.type=folder"  | grep -q "{{ target_service_project_gcs_name }}"; then
+        echo "project "{{ target_service_project_gcs_name }}" is present, so deleting it"
+        gcloud projects delete "{{ target_service_project_gcs_id }}"
+      else
+        echo "project "{{ target_service_project_gcs_name }}" is not present"
+      fi
+
+      if gcloud projects list --filter "parent.id=$PARENT_ID AND  parent.type=folder"  | grep -q "{{ target_service_project_svcs_name }}"; then
+        echo "project "{{ target_service_project_svcs_name }}" is present, so deleting it"
+        gcloud projects delete "{{ target_service_project_svcs_id }}"
+      else
+        echo "project "{{ target_service_project_svcs_name }}" is not present"
+      fi
+    register: delete_projects_output
+    when: (desired_state == 'absent')      
+
+  - name: "delete project output"
+    debug:
+      msg: "{{ delete_projects_output.stdout_lines|join('\n') }}"
+    when: (desired_state == 'absent')
+
+  # ###########  End Section 5 ###########
+
+
+
+  # ###########  Section 6 ###########
+
+  - name: set project billing acount
+    shell: |
+      gcloud auth activate-service-account "{{ service_account_email }}"   --key-file="{{ service_account_file }}" --project="{{ item }}"
+      gcloud config set project "{{ item }}"
+
+      echo "project id {{ item }}"
+      echo "billing acct {{ billing_account }}"
+
+      if gcloud beta billing projects describe "{{ item }}" | grep -q true; then
+        echo "billing is already enabled for this project"
+      else
+        echo "billing for this project is not setup, setting it up"
+        gcloud alpha billing projects link "{{ item }}" --billing-account "{{ billing_account }}"
+      fi
+    register: billing_account
+    when: (desired_state == 'present')
+    with_items:
+      - "{{ target_service_project_bq_id }}"
+      #- "{{ target_service_project_gcs_id }}"
+      #- "{{ target_service_project_svcs_id }}"
+
+
+  - name: "billing account output"
+    debug:
+      msg: "\n===== output:\n{{  item.stdout_lines|join('\n') }} \n==== \n"
+    when: (desired_state == 'present')
+    with_items: "{{ billing_account.results }}"
+
+
+
+  # - name: enable services
+  #   shell: |
+  #     gcloud auth activate-service-account "{{ service_account_email }}"   --key-file="{{ service_account_file }}" --project="{{ item }}"
+  #     gcloud config set project "{{ item }}"
+
+  #     gcloud services enable appengine.googleapis.com
+  #     gcloud services enable artifactregistry.googleapis.com
+  #     gcloud services enable bigquery.googleapis.com
+  #     gcloud services enable bigquerystorage.googleapis.com
+  #     gcloud services enable cloudapis.googleapis.com
+  #     gcloud services enable cloudbilling.googleapis.com
+  #     gcloud services enable cloudbuild.googleapis.com
+  #     gcloud services enable cloudbuild.googleapis.com
+  #     gcloud services enable clouddebugger.googleapis.com
+  #     gcloud services enable cloudfunctions.googleapis.com
+  #     gcloud services enable cloudresourcemanager.googleapis.com
+  #     gcloud services enable cloudresourcemanager.googleapis.com
+  #     gcloud services enable cloudscheduler.googleapis.com
+  #     gcloud services enable cloudtrace.googleapis.com
+  #     gcloud services enable compute.googleapis.com
+  #     gcloud services enable containerregistry.googleapis.com
+  #     gcloud services enable dataflow.googleapis.com
+  #     gcloud services enable firestore.googleapis.com
+  #     gcloud services enable iam.googleapis.com
+  #     gcloud services enable logging.googleapis.com
+  #     gcloud services enable monitoring.googleapis.com
+  #     gcloud services enable pubsub.googleapis.com
+  #     gcloud services enable run.googleapis.com
+  #     gcloud services enable secretmanager.googleapis.com
+  #     gcloud services enable servicemanagement.googleapis.com
+  #     gcloud services enable serviceusage.googleapis.com
+  #     gcloud services enable sourcerepo.googleapis.com
+  #     gcloud services enable storage-api.googleapis.com
+  #     gcloud services enable storage-component.googleapis.com
+  #     gcloud services enable storage.googleapis.com
+  #     gcloud services enable workflows.googleapis.com
+  #   when: (desired_state == 'present')
+  #   with_items:
+  #     - "{{ target_service_project_bq_id }}"
+  #     # - "{{ target_service_project_gcs_id }}"
+  #     # - "{{ target_service_project_svcs_id }}"
+  #   register: enable_services
+
+
+  # - name: "enable services output"
+  #   debug:
+  #     msg: "\n===== output:\n{{  item.stdout_lines|join('\n') }} \n==== \n"
+  #   when: (desired_state == 'present')
+  #   with_items: "{{ enable_services.results }}"
+
+
+  - name: "Enable Google Cloud API services"
+    google.cloud.gcp_serviceusage_service:
+      state: present
+      name: "{{ item[1] }}.googleapis.com"
+      # authentication information
+      project: "{{ item[0] }}"
+      auth_kind: "{{ auth_kind }}"
+      service_account_email: "{{ service_account_email }}"
+    with_nested:
+      - ["{{ target_service_project_bq_id }}"
+        #  , "{{ target_service_project_gcs_id }}"
+        #  , "{{ target_service_project_svcs_id }}"
+        ]
+      - [appengine, artifactregistry, bigquery, bigquerystorage, cloudapis, cloudbilling, cloudbuild, cloudbuild, clouddebugger, cloudfunctions, cloudresourcemanager, cloudresourcemanager, 
+        cloudscheduler, cloudtrace, compute, containerregistry, dataflow, firestore, iam, logging, monitoring, pubsub, run, secretmanager, servicemanagement,
+        serviceusage, sourcerepo, storage-api, storage-component, storage, workflows]
+
+
+  - name: delete default network
+    shell: |
+      gcloud auth activate-service-account "{{ service_account_email }}"   --key-file="{{ service_account_file }}" --project="{{ item }}"
+      gcloud config set project "{{ item }}"
+
+      if gcloud compute networks list | grep -q default; then
+        echo "default network is present, so deleting default network"
+        gcloud compute firewall-rules list --format='value(name)' | while read -r line ;
+        do
+          :
+          RULE_NAME=$line
+          gcloud compute firewall-rules delete "$RULE_NAME" --quiet 
+        done
+        gcloud compute networks delete --quiet default
+      else
+        echo "default network not present"
+      fi
+    register: default_network
+    with_items:
+      - "{{ target_service_project_bq_id }}"
+      #- "{{ target_service_project_gcs_id }}"
+      #- "{{ target_service_project_svcs_id }}"
+
+  - name: "default network output"
+    debug:
+      msg: "\n===== output:\n{{  item.stdout_lines|join('\n') }} \n==== \n"
+    when: (desired_state == 'present')
+    with_items: "{{ default_network.results }}"
+
+
+
+  - name: attach project to Shared VPC host project
+    shell: |
+      gcloud auth activate-service-account "{{ service_account_email }}"   --key-file="{{ service_account_file }}" --project="{{ item }}"
+      gcloud config set project "{{ item }}"
+
+      if gcloud compute shared-vpc associated-projects list "{{ shared_vpc_host_project }}" | grep -q "{{ item }}"; then
+        echo "service project is already attached to the host project"
+      else
+        echo "service project is not attached to the host project, so attaching it now"
+        gcloud compute shared-vpc associated-projects add "{{ item }}"  --host-project "{{ shared_vpc_host_project }}"
+      fi
+    register: service_to_host_project_attach
+    with_items:
+      - "{{ target_service_project_bq_id }}"
+      #- "{{ target_service_project_gcs_id }}"
+      #- "{{ target_service_project_svcs_id }}"
+
+  - name: "service to host project attach output"
+    debug:
+      msg: "\n===== output:\n{{  item.stdout_lines|join('\n') }} \n==== \n"
+    when: (desired_state == 'present')
+    with_items: "{{ service_to_host_project_attach.results }}"
+  
+  # ###########  End Section 6 ###########    
+  
+  
+  
+  
+  
+  
+  
+################################################
+#TODO - change to actual code in the following
+
+#create cloud storage buckets in the service project
+
+#  - name: create a cloud storage bucket for - example
+#    google.cloud.gcp_storage_bucket:
+#      state: "{{ desired_state }}"
+#      name: bsc-mrf-ingestion-1
+#      #
+#      project: "{{ target_service_project_to_be_spawned }}"
+#      auth_kind: "{{ auth_kind }}"
+#      service_account_email: "{{ service_account_email }}"
+
+#  - name: create a cloud scheduler job
+#    google.cloud.gcp_cloudscheduler_job:
+#      state: "{{ desired_state }}"
+#      name: job
+#      region: us-central1
+#      schedule: "*/4 * * * *"
+#      description: test app engine job
+#      time_zone: Europe/London
+#      attempt_deadline: 320s
+#      app_engine_http_target:
+#        http_method: POST
+#        app_engine_routing:
+#          service: web
+#          version: prod
+#          instance: my-instance-001
+#        relative_uri: "/ping"
+#      #
+#      project: "{{ target_service_project_to_be_spawned }}"
+#      auth_kind: "{{ auth_kind }}"
+#      service_account_email: "{{ service_account_email }}"
+
+#  - name: create a bigquery dataset
+#    google.cloud.gcp_bigquery_dataset:
+#      state: "{{ desired_state }}"
+#      name: example_dataset
+#      dataset_reference:
+#        dataset_id: example_dataset
+#      #
+#      project: "{{ target_service_project_to_be_spawned }}"
+#      auth_kind: "{{ auth_kind }}"
+#      service_account_email: "{{ service_account_email }}"
+
+#  - name: create a table
+#    google.cloud.gcp_bigquery_table:
+#      state: "{{ desired_state }}"
+#      name: example_table
+#      dataset: example_dataset
+#      table_reference:
+#        dataset_id:  example_dataset
+#        project_id: "{{ target_service_project_to_be_spawned }}"
+#        table_id: example_table
+#      #
+#      project: "{{ target_service_project_to_be_spawned }}"
+#      auth_kind: "{{ auth_kind }}"
+#      service_account_email: "{{ service_account_email }}"

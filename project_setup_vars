@@ -18,7 +18,6 @@ root_folder_id: 170522258645
 after_root_folder: mrf
 
 parent_folder: "{{ project_environment }}"
-s
 
 
 #create terraform state buckets using ansible or gcloud cli
