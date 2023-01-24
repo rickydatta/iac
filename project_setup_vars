@@ -56,7 +56,7 @@ auth_kind: machineaccount # authentication type
 ###############   WARNING: ANY CHANGE BELOW IS DESTRUCTIVE  ###############
 # desired state is either present or absent
 # WARNING - CHANGE DESTROYS EVERYTHING
-desired_state: present # WARNING - change this to absent to destroy everything; folders are not destroyed
+desired_state: absent # WARNING - change this to absent to destroy everything; folders are not destroyed
 
 # terraform state gcs bucket names
 # normally these names are not changed
