@@ -1,0 +1,67 @@
+# all variables need to be defined here
+
+
+
+# billing acount
+billing_account: 0127F1-7E8F09-C48028 # billing account ID
+
+# dev, staging or production project to be launched
+project_environment: mrf-dev
+
+# folder structure
+
+# root folder (under which folders will be created;  e.g., ops in ops/mrf/mrf-dev)
+# note this folder must exist already
+root_folder: ops # normally 'ops'
+root_folder_id: 170522258645 
+
+after_root_folder: mrf
+
+parent_folder: "{{ project_environment }}"
+
+
+
+#create terraform state buckets using ansible or gcloud cli
+create_buckets_with_ansible: true
+bucket_location: US
+
+
+# service project dev/staging/productoon
+
+
+project_name_prefix: prj-npn-ops          # prefix name
+
+target_service_project_bq_name:     "{{project_name_prefix}}-{{project_environment}}-bigq"   # big query
+target_service_project_bq_id:       "{{project_name_prefix}}-{{project_environment}}-bigq-101"
+
+target_service_project_gcs_name:     "{{project_name_prefix}}-{{project_environment}}-gcs"   # cloud storage
+target_service_project_gcs_id:       "{{project_name_prefix}}-{{project_environment}}-gcs-101"
+
+target_service_project_svcs_name:     "{{project_name_prefix}}-{{project_environment}}-svcs"   # services
+target_service_project_svcs_id:       "{{project_name_prefix}}-{{project_environment}}-svcs-101"
+
+
+#existing shared VPC host project
+shared_vpc_host_project: host-project-2-bsc-mrf # use existing host project name
+
+#existing terraform state (gcs buckets) project
+terraform_state_project: tf-state-project # use existing project that holds gcs buckets for terraform state
+
+#authentication information
+service_account_email: sa-test@iac-root-project.iam.gserviceaccount.com
+service_account_file: ./service_account_key.json # service account with key file for the above email
+project: iac-root-project # IAC project where cloud build is hosted
+auth_kind: serviceaccount # authentication type
+
+###############   WARNING: ANY CHANGE BELOW IS DESTRUCTIVE  ###############
+# desired state is either present or absent
+# WARNING - CHANGE DESTROYS EVERYTHING
+desired_state: present # WARNING - change this to absent to destroy everything; folders are not destroyed
+
+# terraform state gcs bucket names
+# normally these names are not changed
+# WARNING - CHANGE DESTROYS EVERYTHING
+production_bucket: production-bsc-mrf-tf-state-bucket # WARNING - name change will destroy everything
+staging_bucket: staging-bsc-mrf-tf-state-bucket       # WARNING - name change will destroy everything
+dev_bucket: dev-bsc-mrf-tf-state-bucket               # WARNING - name change will destroy everything
+###############   WARNING: ANY CHANGE ABOVE IS DESTRUCTIVE  ###############
