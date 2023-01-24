@@ -16,4 +16,4 @@ RUN DEBIAN_FRONTEND=noninteractive apt update && \
     pip install --upgrade requests --no-cache-dir&& \
     pip install --upgrade google-auth --no-cache-dir
 
-ENTRYPOINT ANSIBLE_STDOUT_CALLBACK=debug ansible-playbook -vvv ansible_project_setup.yaml
+ENTRYPOINT ANSIBLE_STDOUT_CALLBACK=debug ansible-playbook ansible_project_setup.yaml
