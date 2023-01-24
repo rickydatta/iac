@@ -287,7 +287,7 @@
 
   - name: set project billing acount
     shell: |
-      gcloud auth activate-service-account "{{ service_account_email }}"   --key-file="{{ service_account_file }}" --project="{{ item }}"
+      # gcloud auth activate-service-account "{{ service_account_email }}"   --key-file="{{ service_account_file }}" --project="{{ item }}"
       gcloud config set project "{{ item }}"
 
       echo "project id {{ item }}"
@@ -384,40 +384,40 @@
         serviceusage, sourcerepo, storage-api, storage-component, storage, workflows]
 
 
-  - name: delete default network
-    shell: |
-      gcloud auth activate-service-account "{{ service_account_email }}"   --key-file="{{ service_account_file }}" --project="{{ item }}"
-      gcloud config set project "{{ item }}"
+  # - name: delete default network
+  #   shell: |
+  #     #gcloud auth activate-service-account "{{ service_account_email }}"   --key-file="{{ service_account_file }}" --project="{{ item }}"
+  #     gcloud config set project "{{ item }}"
 
-      if gcloud compute networks list | grep -q default; then
-        echo "default network is present, so deleting default network"
-        gcloud compute firewall-rules list --format='value(name)' | while read -r line ;
-        do
-          :
-          RULE_NAME=$line
-          gcloud compute firewall-rules delete "$RULE_NAME" --quiet 
-        done
-        gcloud compute networks delete --quiet default
-      else
-        echo "default network not present"
-      fi
-    register: default_network
-    with_items:
-      - "{{ target_service_project_bq_id }}"
-      #- "{{ target_service_project_gcs_id }}"
-      #- "{{ target_service_project_svcs_id }}"
+  #     if gcloud compute networks list | grep -q default; then
+  #       echo "default network is present, so deleting default network"
+  #       gcloud compute firewall-rules list --format='value(name)' | while read -r line ;
+  #       do
+  #         :
+  #         RULE_NAME=$line
+  #         gcloud compute firewall-rules delete "$RULE_NAME" --quiet 
+  #       done
+  #       gcloud compute networks delete --quiet default
+  #     else
+  #       echo "default network not present"
+  #     fi
+  #   register: default_network
+  #   with_items:
+  #     - "{{ target_service_project_bq_id }}"
+  #     #- "{{ target_service_project_gcs_id }}"
+  #     #- "{{ target_service_project_svcs_id }}"
 
-  - name: "default network output"
-    debug:
-      msg: "\n===== output:\n{{  item.stdout_lines|join('\n') }} \n==== \n"
-    when: (desired_state == 'present')
-    with_items: "{{ default_network.results }}"
+  # - name: "default network output"
+  #   debug:
+  #     msg: "\n===== output:\n{{  item.stdout_lines|join('\n') }} \n==== \n"
+  #   when: (desired_state == 'present')
+  #   with_items: "{{ default_network.results }}"
 
 
 
   - name: attach project to Shared VPC host project
     shell: |
-      gcloud auth activate-service-account "{{ service_account_email }}"   --key-file="{{ service_account_file }}" --project="{{ item }}"
+      # gcloud auth activate-service-account "{{ service_account_email }}"   --key-file="{{ service_account_file }}" --project="{{ item }}"
       gcloud config set project "{{ item }}"
 
       if gcloud compute shared-vpc associated-projects list "{{ shared_vpc_host_project }}" | grep -q "{{ item }}"; then
