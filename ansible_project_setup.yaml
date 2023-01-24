@@ -13,25 +13,14 @@
 
     # enable service APIs in the project for terraform state project;
 
-    # - name: "Enable Google Cloud API services"
-    #   google.cloud.gcp_serviceusage_service:
-    #     state: present
-    #     name: "{{ item }}.googleapis.com"
-    #     # authentication information
-    #     project: "{{ terraform_state_project }}"
-    #     auth_kind: "{{ auth_kind }}"
-    #     service_account_file: "{{ service_account_file }}"
-    #   loop:
-    #     - storage
-
     - name: "Enable Google Cloud API services"
       google.cloud.gcp_serviceusage_service:
         state: present
         name: "{{ item }}.googleapis.com"
         # authentication information
         project: "{{ terraform_state_project }}"
-        auth_kind: machineaccount
-        service_account_email: sa-test@iac-root-project.iam.gserviceaccount.com
+        auth_kind: "{{ auth_kind }}"
+        service_account_email: "{{ service_account_email }}"
       loop:
         - storage
 

@@ -1,0 +1,14 @@
+Project Setup (part 1)
+
+No      Topic                                           Ansible Mod(Stock)  BSC GCP Issue        Alternate Way             Final Implementation
+
+ 1      Enable Google Cloud API services                yes                                                                 Ansible                  
+ 2      Cloud storage                                   yes                 error                 provided (gcloud cli)     gcloud/Ansible
+ 3      Create folder                                   no                                        provided (gcloud cli)     gcloud
+ 4      List folder                                     no                                        provided (gcloud cli)     gcloud
+ 5      Create Project (note: our spec changed)         yes
+ 6      Create Project in a Folder                      no                                        provided (gcloud cli)     gcloud
+ 7      Delete Project                                  yes (errors)                              provided (gcloud cli)     gcloud
+ 8      Set Project Billing Account                     no                                        provided (gcloud cli)     gcloud
+ 9      Delete Default network                          no                                        provided (gcloud cli)     gcloud
+10      Attach Service Prj to Shared VPC Host Project   no                                        provided (gcloud cli)     gcloud
