@@ -213,19 +213,19 @@
         gcloud projects create "{{ target_service_project_bq_id }}" --name="{{ target_service_project_bq_name }}" --folder=$PARENT_ID
       fi
 
-      if gcloud projects list --filter "parent.id=$PARENT_ID AND  parent.type=folder"  | grep -q "{{ target_service_project_gcs_name }}"; then
-        echo "project "{{ target_service_project_gcs_name }}" is present, so skipping it"
-      else
-        echo "project "{{ target_service_project_gcs_name }}" is not present, so creating it"
-        gcloud projects create "{{ target_service_project_gcs_id }}" --name="{{ target_service_project_gcs_name }}" --folder=$PARENT_ID
-      fi
+      # if gcloud projects list --filter "parent.id=$PARENT_ID AND  parent.type=folder"  | grep -q "{{ target_service_project_gcs_name }}"; then
+      #   echo "project "{{ target_service_project_gcs_name }}" is present, so skipping it"
+      # else
+      #   echo "project "{{ target_service_project_gcs_name }}" is not present, so creating it"
+      #   gcloud projects create "{{ target_service_project_gcs_id }}" --name="{{ target_service_project_gcs_name }}" --folder=$PARENT_ID
+      # fi
 
-      if gcloud projects list --filter "parent.id=$PARENT_ID AND  parent.type=folder"  | grep -q "{{ target_service_project_svcs_name }}"; then
-        echo "project "{{ target_service_project_svcs_name }}" is present, so skipping it"
-      else
-        echo "project "{{ target_service_project_svcs_name }}" is not present, so creating it"
-        gcloud projects create "{{ target_service_project_svcs_id }}" --name="{{ target_service_project_svcs_name }}" --folder=$PARENT_ID
-      fi
+      # if gcloud projects list --filter "parent.id=$PARENT_ID AND  parent.type=folder"  | grep -q "{{ target_service_project_svcs_name }}"; then
+      #   echo "project "{{ target_service_project_svcs_name }}" is present, so skipping it"
+      # else
+      #   echo "project "{{ target_service_project_svcs_name }}" is not present, so creating it"
+      #   gcloud projects create "{{ target_service_project_svcs_id }}" --name="{{ target_service_project_svcs_name }}" --folder=$PARENT_ID
+      # fi
     register: create_projects_output
     when: (desired_state == 'present')      
 
