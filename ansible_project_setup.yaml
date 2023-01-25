@@ -69,14 +69,10 @@
   - name: create storage bucket with gcloud cli (when create_buckets_with_ansible = false )
     shell: |
       if gcloud storage ls | grep -q "{{ item }}"; then
-
-        echo "bucket "gs://{{ item }}" is already present, so skipping this step"
-
+        echo bucket "gs://{{ item }}" is already present, so skipping this step
       else
-
-        echo "bucket "gs://{{ item }}" is not present, so creating it"  
+        echo bucket "gs://{{ item }}" is not present, so creating it 
         gcloud storage buckets create "gs://{{ item }}" --project="{{ terraform_state_project }}" --location="{{ bucket_location }}" --uniform-bucket-level-access
-
       fi
     when: (not create_buckets_with_ansible) and (desired_state == 'present')
     register: buckets_output
@@ -87,7 +83,7 @@
 
   - name: "create storage bucket output"
     debug:
-      msg: "\n===== output:\n{{ item.stdout_lines|join('\n') }} \n==== \n"
+      msg: "{{ item.stdout_lines|join('') }}"
     loop: "{{ buckets_output.results }}"
     when: (not create_buckets_with_ansible) and (desired_state == 'present')
 
@@ -98,12 +94,12 @@
     shell: |
       if gcloud storage ls | grep -q "{{ item }}"; then
 
-        echo "bucket "gs://{{ item }}" is present, so deleting it"
+        echo bucket "gs://{{ item }}" is present, so deleting it
         gcloud storage rm --recursive "gs://{{ item }}"
 
       else
 
-        echo "bucket "gs://{{ item }}" is not present"  
+        echo bucket "gs://{{ item }}" is not present 
 
       fi
     when: (not create_buckets_with_ansible) and (desired_state == 'absent')
@@ -115,7 +111,7 @@
 
   - name: "delete storage bucket output"
     debug:
-      msg: "\n===== output:\n{{ item.stdout_lines|join('\n') }} \n==== \n"
+      msg: "{{ item.stdout_lines|join('') }}"
     loop: "{{ buckets_output.results }}"
     when: (not create_buckets_with_ansible) and (desired_state == 'absent')
 
@@ -135,9 +131,9 @@
   - name: create folder after_root # ususally ops/mrf
     shell: |
       if gcloud resource-manager folders list --folder="{{ root_folder_id }}" | grep -q "{{ after_root_folder }}"; then
-        echo "folder "{{ after_root_folder }}" is present, so skipping it"
+        echo folder "{{ after_root_folder }}" is present, so skipping it
       else
-        echo "folder "{{ after_root_folder }}" is not present, so creating it"
+        echo folder "{{ after_root_folder }}" is not present, so creating it
         gcloud resource-manager folders create --display-name="{{ after_root_folder }}" --folder="{{ root_folder_id }}"
       fi
     register: root_folder_output
@@ -145,7 +141,7 @@
 
   - name: "root_folder_output output"
     debug:
-      msg: "\n===== output:\n{{ root_folder_output.stdout }} \n==== \n"
+      msg: "{{ root_folder_output.stdout }}"
     when: (desired_state == 'present')
 
   # create project parent folder
@@ -153,11 +149,11 @@
   - name: create folder project parent folder # ususally ops/mrf/mrf-dev
     shell: |
       FID=$(gcloud resource-manager folders list --folder={{ root_folder_id }} --filter="display_name:{{after_root_folder}}" --format="value(ID)")
-      echo "folder name={{after_root_folder}}  id=$FID"
+      echo folder name={{after_root_folder}}  id=$FID
       if gcloud resource-manager folders list --folder=$FID | grep -q "{{ parent_folder }}"; then
-        echo "folder "{{ parent_folder }}" is present, so skipping it"
+        echo folder "{{ parent_folder }}" is present, so skipping it
       else
-        echo "folder "{{ parent_folder }}" is not present, so creating it"
+        echo folder "{{ parent_folder }}" is not present, so creating it
         gcloud resource-manager folders create --display-name="{{ parent_folder }}" --folder=$FID
       fi
     register: parent_folder_output
@@ -165,7 +161,7 @@
 
   - name: "project parent folder output"
     debug:
-      msg: "\n===== output:\n{{  parent_folder_output.stdout }} \n==== \n"
+      msg: "{{  parent_folder_output.stdout }}"
     when: (desired_state == 'present')
 
 
@@ -195,31 +191,31 @@
 
   - name: create projects # ususally ops/mrf/mrf-dev/prj-npn-ops-mrf-dev-gcs ...
     shell: |
-      echo "folder name={{ root_folder }}  id={{ root_folder_id }}"
+      echo folder name={{ root_folder }}  id={{ root_folder_id }}
       AFTER_ROOT_ID=$(gcloud resource-manager folders list --folder={{ root_folder_id }} --filter="display_name:{{ after_root_folder }}" --format="value(ID)")
-      echo "folder name={{ after_root_folder }}  id=$AFTER_ROOT_ID"
+      echo folder name={{ after_root_folder }}  id=$AFTER_ROOT_ID
 
       PARENT_ID=$(gcloud resource-manager folders list --folder=$AFTER_ROOT_ID --filter="display_name:{{ parent_folder }}" --format="value(ID)")
-      echo "folder name={{ parent_folder }}  id=$PARENT_ID"
+      echo folder name={{ parent_folder }}  id=$PARENT_ID
 
       if gcloud projects list --filter "parent.id=$PARENT_ID AND  parent.type=folder" | grep -q "{{ target_service_project_bq_name }}"; then
-        echo "project "{{ target_service_project_bq_name }}" is present, so skipping it"
+        echo project "{{ target_service_project_bq_name }}" is present, so skipping it
       else
-        echo "project "{{ target_service_project_bq_name }}" is not present, so creating it"
+        echo project "{{ target_service_project_bq_name }}" is not present, so creating it
         gcloud projects create "{{ target_service_project_bq_id }}" --name="{{ target_service_project_bq_name }}" --folder=$PARENT_ID
       fi
 
       # if gcloud projects list --filter "parent.id=$PARENT_ID AND  parent.type=folder"  | grep -q "{{ target_service_project_gcs_name }}"; then
-      #   echo "project "{{ target_service_project_gcs_name }}" is present, so skipping it"
+      #   echo project "{{ target_service_project_gcs_name }}" is present, so skipping it
       # else
-      #   echo "project "{{ target_service_project_gcs_name }}" is not present, so creating it"
+      #   echo project "{{ target_service_project_gcs_name }}" is not present, so creating it
       #   gcloud projects create "{{ target_service_project_gcs_id }}" --name="{{ target_service_project_gcs_name }}" --folder=$PARENT_ID
       # fi
 
       # if gcloud projects list --filter "parent.id=$PARENT_ID AND  parent.type=folder"  | grep -q "{{ target_service_project_svcs_name }}"; then
-      #   echo "project "{{ target_service_project_svcs_name }}" is present, so skipping it"
+      #   echo project "{{ target_service_project_svcs_name }}" is present, so skipping it
       # else
-      #   echo "project "{{ target_service_project_svcs_name }}" is not present, so creating it"
+      #   echo project "{{ target_service_project_svcs_name }}" is not present, so creating it
       #   gcloud projects create "{{ target_service_project_svcs_id }}" --name="{{ target_service_project_svcs_name }}" --folder=$PARENT_ID
       # fi
     register: create_projects_output
@@ -227,7 +223,7 @@
 
   - name: "create project output"
     debug:
-      msg: "{{ create_projects_output.stdout_lines|join('\n') }}"
+      msg: "{{ create_projects_output.stdout_lines|join('') }}"
     when: (desired_state == 'present')
 
 # ###########  End Section 4 ###########
@@ -240,39 +236,39 @@
 
   - name: delete projects # ususally ops/mrf/mrf-dev/prj-npn-ops-mrf-dev-gcs ...
     shell: |
-      echo "folder name={{ root_folder }}  id={{ root_folder_id }}"
+      echo folder name={{ root_folder }}  id={{ root_folder_id }}
       AFTER_ROOT_ID=$(gcloud resource-manager folders list --folder={{ root_folder_id }} --filter="display_name:{{ after_root_folder }}" --format="value(ID)")
-      echo "folder name={{ after_root_folder }}  id=$AFTER_ROOT_ID"
+      echo folder name={{ after_root_folder }}  id=$AFTER_ROOT_ID
 
       PARENT_ID=$(gcloud resource-manager folders list --folder=$AFTER_ROOT_ID --filter="display_name:{{ parent_folder }}" --format="value(ID)")
-      echo "folder name={{ parent_folder }}  id=$PARENT_ID"
+      echo folder name={{ parent_folder }}  id=$PARENT_ID"
 
       if gcloud projects list --filter "parent.id=$PARENT_ID AND  parent.type=folder" | grep -q "{{ target_service_project_bq_name }}"; then
-        echo "project "{{ target_service_project_bq_name }}" is present, so deleting it"
+        echo project "{{ target_service_project_bq_name }}" is present, so deleting it
         gcloud projects delete "{{ target_service_project_bq_id }}"
       else
-        echo "project "{{ target_service_project_bq_name }}" is not present"
+        echo project "{{ target_service_project_bq_name }}" is not present
       fi
 
       if gcloud projects list --filter "parent.id=$PARENT_ID AND  parent.type=folder"  | grep -q "{{ target_service_project_gcs_name }}"; then
-        echo "project "{{ target_service_project_gcs_name }}" is present, so deleting it"
+        echo project "{{ target_service_project_gcs_name }}" is present, so deleting it
         gcloud projects delete "{{ target_service_project_gcs_id }}"
       else
-        echo "project "{{ target_service_project_gcs_name }}" is not present"
+        echo project "{{ target_service_project_gcs_name }}" is not present
       fi
 
       if gcloud projects list --filter "parent.id=$PARENT_ID AND  parent.type=folder"  | grep -q "{{ target_service_project_svcs_name }}"; then
-        echo "project "{{ target_service_project_svcs_name }}" is present, so deleting it"
+        echo project "{{ target_service_project_svcs_name }}" is present, so deleting it
         gcloud projects delete "{{ target_service_project_svcs_id }}"
       else
-        echo "project "{{ target_service_project_svcs_name }}" is not present"
+        echo project "{{ target_service_project_svcs_name }}" is not present
       fi
     register: delete_projects_output
     when: (desired_state == 'absent')      
 
   - name: "delete project output"
     debug:
-      msg: "{{ delete_projects_output.stdout_lines|join('\n') }}"
+      msg: "{{ delete_projects_output.stdout_lines|join('') }}"
     when: (desired_state == 'absent')
 
   # ###########  End Section 5 ###########
@@ -285,13 +281,13 @@
     shell: |
       gcloud config set project "{{ item }}"
 
-      echo "project id {{ item }}"
-      echo "billing acct {{ billing_account }}"
+      echo project id "{{ item }}"
+      echo billing acct "{{ billing_account }}"
 
       if gcloud beta billing projects describe "{{ item }}" | grep -q true; then
-        echo "billing is already enabled for this project"
+        echo billing is already enabled for this project
       else
-        echo "billing for this project is not setup, setting it up"
+        echo billing for this project is not setup, setting it up
         gcloud alpha billing projects link "{{ item }}" --billing-account "{{ billing_account }}"
       fi
     register: billing_account
@@ -304,7 +300,7 @@
 
   - name: "billing account output"
     debug:
-      msg: "\n===== output:\n{{  item.stdout_lines|join('\n') }} \n==== \n"
+      msg: "{{  item.stdout_lines|join('') }}"
     when: (desired_state == 'present')
     with_items: "{{ billing_account.results }}"
 
@@ -332,7 +328,7 @@
   #     gcloud config set project "{{ item }}"
 
   #     if gcloud compute networks list | grep -q default; then
-  #       echo "default network is present, so deleting default network"
+  #       echo default network is present, so deleting default network
   #       gcloud compute firewall-rules list --format='value(name)' | while read -r line ;
   #       do
   #         :
@@ -341,7 +337,7 @@
   #       done
   #       gcloud compute networks delete --quiet default
   #     else
-  #       echo "default network not present"
+  #       echo default network not present
   #     fi
   #   register: default_network
   #   with_items:
@@ -351,7 +347,7 @@
 
   # - name: "default network output"
   #   debug:
-  #     msg: "\n===== output:\n{{  item.stdout_lines|join('\n') }} \n==== \n"
+  #     msg: "{{  item.stdout_lines|join('') }}"
   #   when: (desired_state == 'present')
   #   with_items: "{{ default_network.results }}"
 
@@ -362,9 +358,9 @@
       gcloud config set project "{{ item }}"
 
       if gcloud compute shared-vpc associated-projects list "{{ shared_vpc_host_project }}" | grep -q "{{ item }}"; then
-        echo "service project is already attached to the host project"
+        echo service project is already attached to the host project
       else
-        echo "service project is not attached to the host project, so attaching it now"
+        echo service project is not attached to the host project, so attaching it now
         gcloud compute shared-vpc associated-projects add "{{ item }}"  --host-project "{{ shared_vpc_host_project }}"
       fi
     register: service_to_host_project_attach
@@ -375,7 +371,7 @@
 
   - name: "service to host project attach output"
     debug:
-      msg: "\n===== output:\n{{  item.stdout_lines|join('\n') }} \n==== \n"
+      msg: "{{  item.stdout_lines|join('') }}"
     when: (desired_state == 'present')
     with_items: "{{ service_to_host_project_attach.results }}"
   
