@@ -241,7 +241,7 @@
       echo folder name={{ after_root_folder }}  id=$AFTER_ROOT_ID
 
       PARENT_ID=$(gcloud resource-manager folders list --folder=$AFTER_ROOT_ID --filter="display_name:{{ parent_folder }}" --format="value(ID)")
-      echo folder name={{ parent_folder }}  id=$PARENT_ID"
+      echo folder name={{ parent_folder }}  id=$PARENT_ID
 
       if gcloud projects list --filter "parent.id=$PARENT_ID AND  parent.type=folder" | grep -q "{{ target_service_project_bq_name }}"; then
         echo project "{{ target_service_project_bq_name }}" is present, so deleting it
