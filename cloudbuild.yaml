@@ -2,9 +2,6 @@ steps:
 - name: 'gcr.io/cloud-builders/docker'
   args: ['build', '--tag=gcr.io/$PROJECT_ID/ansible-project-setup', '-f', 'Dockerfile',  '--build-arg=PROJECT_ID=$PROJECT_ID','.']
 
-- name: 'gcr.io/$PROJECT_ID/ansible'    # Simple sanity check: check that ansible-playbook has not errors
-  args: ['--version']
-
 - name: 'gcr.io/$PROJECT_ID/ansible-project-setup'
 
 options:
