@@ -60,10 +60,6 @@
 
   #   ###########   Section 2 (alternative to section 1) ###########
 
-  # - name: gcloud auth
-  #   command: gcloud auth activate-service-account "{{ service_account_email }}"   --key-file="{{ service_account_file }}" --project="{{ terraform_state_project }}"
-  #   when: not create_buckets_with_ansible
-
   - name: gcloud set project
     command: gcloud config set project "{{ terraform_state_project }}"
     when: not create_buckets_with_ansible
@@ -287,7 +283,6 @@
 
   - name: set project billing acount
     shell: |
-      # gcloud auth activate-service-account "{{ service_account_email }}"   --key-file="{{ service_account_file }}" --project="{{ item }}"
       gcloud config set project "{{ item }}"
 
       echo "project id {{ item }}"
@@ -314,58 +309,6 @@
     with_items: "{{ billing_account.results }}"
 
 
-
-  # - name: enable services
-  #   shell: |
-  #     gcloud auth activate-service-account "{{ service_account_email }}"   --key-file="{{ service_account_file }}" --project="{{ item }}"
-  #     gcloud config set project "{{ item }}"
-
-  #     gcloud services enable appengine.googleapis.com
-  #     gcloud services enable artifactregistry.googleapis.com
-  #     gcloud services enable bigquery.googleapis.com
-  #     gcloud services enable bigquerystorage.googleapis.com
-  #     gcloud services enable cloudapis.googleapis.com
-  #     gcloud services enable cloudbilling.googleapis.com
-  #     gcloud services enable cloudbuild.googleapis.com
-  #     gcloud services enable cloudbuild.googleapis.com
-  #     gcloud services enable clouddebugger.googleapis.com
-  #     gcloud services enable cloudfunctions.googleapis.com
-  #     gcloud services enable cloudresourcemanager.googleapis.com
-  #     gcloud services enable cloudresourcemanager.googleapis.com
-  #     gcloud services enable cloudscheduler.googleapis.com
-  #     gcloud services enable cloudtrace.googleapis.com
-  #     gcloud services enable compute.googleapis.com
-  #     gcloud services enable containerregistry.googleapis.com
-  #     gcloud services enable dataflow.googleapis.com
-  #     gcloud services enable firestore.googleapis.com
-  #     gcloud services enable iam.googleapis.com
-  #     gcloud services enable logging.googleapis.com
-  #     gcloud services enable monitoring.googleapis.com
-  #     gcloud services enable pubsub.googleapis.com
-  #     gcloud services enable run.googleapis.com
-  #     gcloud services enable secretmanager.googleapis.com
-  #     gcloud services enable servicemanagement.googleapis.com
-  #     gcloud services enable serviceusage.googleapis.com
-  #     gcloud services enable sourcerepo.googleapis.com
-  #     gcloud services enable storage-api.googleapis.com
-  #     gcloud services enable storage-component.googleapis.com
-  #     gcloud services enable storage.googleapis.com
-  #     gcloud services enable workflows.googleapis.com
-  #   when: (desired_state == 'present')
-  #   with_items:
-  #     - "{{ target_service_project_bq_id }}"
-  #     # - "{{ target_service_project_gcs_id }}"
-  #     # - "{{ target_service_project_svcs_id }}"
-  #   register: enable_services
-
-
-  # - name: "enable services output"
-  #   debug:
-  #     msg: "\n===== output:\n{{  item.stdout_lines|join('\n') }} \n==== \n"
-  #   when: (desired_state == 'present')
-  #   with_items: "{{ enable_services.results }}"
-
-
   - name: "Enable Google Cloud API services"
     google.cloud.gcp_serviceusage_service:
       state: present
@@ -386,7 +329,6 @@
 
   # - name: delete default network
   #   shell: |
-  #     #gcloud auth activate-service-account "{{ service_account_email }}"   --key-file="{{ service_account_file }}" --project="{{ item }}"
   #     gcloud config set project "{{ item }}"
 
   #     if gcloud compute networks list | grep -q default; then
@@ -417,7 +359,6 @@
 
   - name: attach project to Shared VPC host project
     shell: |
-      # gcloud auth activate-service-account "{{ service_account_email }}"   --key-file="{{ service_account_file }}" --project="{{ item }}"
       gcloud config set project "{{ item }}"
 
       if gcloud compute shared-vpc associated-projects list "{{ shared_vpc_host_project }}" | grep -q "{{ item }}"; then

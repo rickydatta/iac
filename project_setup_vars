@@ -48,7 +48,6 @@ terraform_state_project: tf-state-project # use existing project that holds gcs 
 
 #authentication information
 service_account_email: sa-test@iac-root-project.iam.gserviceaccount.com
-service_account_file: ./service_account_key.json # service account with key file for the above email
 project: iac-root-project # IAC project where cloud build is hosted
 auth_kind: machineaccount # authentication type
 
