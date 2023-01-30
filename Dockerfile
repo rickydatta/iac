@@ -45,6 +45,7 @@ rm -rf /var/cache/apk/*
 RUN curl -sSL https://sdk.cloud.google.com | bash
 ENV PATH $PATH:/root/google-cloud-sdk/bin
 RUN gcloud components install alpha beta
+ENV ANSIBLE_STDOUT_CALLBACK=debug
 
 # temporary
 #RUN python3 bsc_file_read_and_write.py
@@ -52,4 +53,4 @@ RUN gcloud components install alpha beta
 # temporary
 #ENTRYPOINT ["/usr/bin/ansible-playbook"]
 
-ENTRYPOINT ANSIBLE_STDOUT_CALLBACK=debug ansible-playbook ansible_project_setup.yaml
+#ENTRYPOINT ANSIBLE_STDOUT_CALLBACK=debug ansible-playbook ansible_project_setup.yaml

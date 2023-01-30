@@ -1,13 +1,22 @@
 steps:
 - name: 'gcr.io/cloud-builders/docker'
-  args: ['build', '--tag=gcr.io/$PROJECT_ID/ansible-project-setup', '-f', 'Dockerfile',  '--build-arg=PROJECT_ID=$PROJECT_ID','.']
+  args: ['build', '--tag=gcr.io/$PROJECT_ID/ansible', '-f', 'Dockerfile',  '--build-arg=PROJECT_ID=$PROJECT_ID','.']
 
-- name: 'gcr.io/$PROJECT_ID/ansible-project-setup'
+# Simple sanity check: check that ansible-playbook has not errors
+- name: 'gcr.io/$PROJECT_ID/ansible'
+  args: ['--version']
+
+#- name: 'gcr.io/$PROJECT_ID/ansible-project-setup'
+
+- name: 'gcr.io/$PROJECT_ID/ansible'
+  entrypoint: '/usr/bin/ansible-playbook'
+  args:
+  - ansible_project_setup.yaml
 
 options:
   logging: CLOUD_LOGGING_ONLY
 
 images:
-- 'gcr.io/$PROJECT_ID/ansible-project-setup'
+- 'gcr.io/$PROJECT_ID/ansible'
 
 
