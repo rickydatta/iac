@@ -1,8 +1,0 @@
-// setup host project
-
-
--- create project
--- setup billing account
--- setup networking
-gcloud compute shared-vpc enable  host-project
-gcloud compute shared-vpc organizations list-host-projects ORG_ID

@@ -21,8 +21,8 @@ parent_folder: "{{ project_environment }}"
 
 
 #create terraform state buckets using ansible or gcloud cli
-create_buckets_with_ansible: false
-bucket_location: US
+# create_buckets_with_ansible: false
+# bucket_location: US
 
 
 # service project dev/staging/productoon
@@ -59,7 +59,7 @@ desired_state: present # WARNING - change this to absent to destroy everything; 
 # terraform state gcs bucket names
 # normally these names are not changed
 # WARNING - CHANGE DESTROYS EVERYTHING
-production_bucket: production-bsc-mrf-tf-state-bucket # WARNING - name change will destroy everything
-staging_bucket: staging-bsc-mrf-tf-state-bucket       # WARNING - name change will destroy everything
-dev_bucket: dev-bsc-mrf-tf-state-bucket               # WARNING - name change will destroy everything
+# production_bucket: production-bsc-mrf-tf-state-bucket # WARNING - name change will destroy everything
+# staging_bucket: staging-bsc-mrf-tf-state-bucket       # WARNING - name change will destroy everything
+# dev_bucket: dev-bsc-mrf-tf-state-bucket               # WARNING - name change will destroy everything
 ###############   WARNING: ANY CHANGE ABOVE IS DESTRUCTIVE  ###############

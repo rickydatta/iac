@@ -7,115 +7,115 @@
 
   tasks:
 
-    ###########   Section 1 ###########
+  #   ###########   Section 1 ###########
 
-    # create terraform state buckets first
+  #   # create terraform state buckets first
 
-    # enable service APIs in the project for terraform state project;
+  #   # enable service APIs in the project for terraform state project;
 
-  - name: "Enable Google Cloud API services"
-    google.cloud.gcp_serviceusage_service:
-      state: present
-      name: "{{ item }}.googleapis.com"
-      # authentication information
-      project: "{{ terraform_state_project }}"
-      auth_kind: "{{ auth_kind }}"
-      service_account_email: "{{ service_account_email }}"
-    loop:
-      - storage
+  # - name: "Enable Google Cloud API services"
+  #   google.cloud.gcp_serviceusage_service:
+  #     state: present
+  #     name: "{{ item }}.googleapis.com"
+  #     # authentication information
+  #     project: "{{ terraform_state_project }}"
+  #     auth_kind: "{{ auth_kind }}"
+  #     service_account_email: "{{ service_account_email }}"
+  #   loop:
+  #     - storage
 
-  - name: create a terraform state bucket for dev
-    google.cloud.gcp_storage_bucket:
-      state: "{{ desired_state }}"
-      name: "{{ dev_bucket }}"
-      #
-      project: "{{ terraform_state_project }}"
-      auth_kind: "{{ auth_kind }}"
-      service_account_email: "{{ service_account_email }}"
-    when: create_buckets_with_ansible
+  # - name: create a terraform state bucket for dev
+  #   google.cloud.gcp_storage_bucket:
+  #     state: "{{ desired_state }}"
+  #     name: "{{ dev_bucket }}"
+  #     #
+  #     project: "{{ terraform_state_project }}"
+  #     auth_kind: "{{ auth_kind }}"
+  #     service_account_email: "{{ service_account_email }}"
+  #   when: create_buckets_with_ansible
 
-  - name: create a terraform state bucket for staging
-    google.cloud.gcp_storage_bucket:
-      state: "{{ desired_state }}"
-      name: "{{ staging_bucket }}"
-      #
-      project: "{{ terraform_state_project }}"
-      auth_kind: "{{ auth_kind }}"
-      service_account_email: "{{ service_account_email }}"
-    when: create_buckets_with_ansible
+  # - name: create a terraform state bucket for staging
+  #   google.cloud.gcp_storage_bucket:
+  #     state: "{{ desired_state }}"
+  #     name: "{{ staging_bucket }}"
+  #     #
+  #     project: "{{ terraform_state_project }}"
+  #     auth_kind: "{{ auth_kind }}"
+  #     service_account_email: "{{ service_account_email }}"
+  #   when: create_buckets_with_ansible
 
-  - name: create a terraform state bucket for production
-    google.cloud.gcp_storage_bucket:
-      state: "{{ desired_state }}"
-      name: "{{ production_bucket }}"
-      #
-      project: "{{ terraform_state_project }}"
-      auth_kind: "{{ auth_kind }}"
-      service_account_email: "{{ service_account_email }}"
-    when: create_buckets_with_ansible
+  # - name: create a terraform state bucket for production
+  #   google.cloud.gcp_storage_bucket:
+  #     state: "{{ desired_state }}"
+  #     name: "{{ production_bucket }}"
+  #     #
+  #     project: "{{ terraform_state_project }}"
+  #     auth_kind: "{{ auth_kind }}"
+  #     service_account_email: "{{ service_account_email }}"
+  #   when: create_buckets_with_ansible
 
-  #   ###########   End Section 1 ###########
-
-
-
-  #   ###########   Section 2 (alternative to section 1) ###########
-
-  - name: gcloud set project
-    command: gcloud config set project "{{ terraform_state_project }}"
-    when: not create_buckets_with_ansible
-
-  # create buckets for terraform state
-
-  - name: create storage bucket with gcloud cli (when create_buckets_with_ansible = false )
-    shell: |
-      if gcloud storage ls | grep -q "{{ item }}"; then
-        echo bucket "gs://{{ item }}" is already present, so skipping this step
-      else
-        echo bucket "gs://{{ item }}" is not present, so creating it 
-        gcloud storage buckets create "gs://{{ item }}" --project="{{ terraform_state_project }}" --location="{{ bucket_location }}" --uniform-bucket-level-access
-      fi
-    when: (not create_buckets_with_ansible) and (desired_state == 'present')
-    register: buckets_output
-    loop:
-      - "{{ dev_bucket }}"
-      - "{{ staging_bucket }}"
-      - "{{ production_bucket }}"
-
-  - name: "create storage bucket output"
-    debug:
-      msg: "{{ item.stdout_lines|join('') }}"
-    loop: "{{ buckets_output.results }}"
-    when: (not create_buckets_with_ansible) and (desired_state == 'present')
+  # #   ###########   End Section 1 ###########
 
 
-  # delete buckets for terraform state
 
-  - name: delete storage bucket with gcloud cli (when create_buckets_with_ansible = false )
-    shell: |
-      if gcloud storage ls | grep -q "{{ item }}"; then
+  # #   ###########   Section 2 (alternative to section 1) ###########
 
-        echo bucket "gs://{{ item }}" is present, so deleting it
-        gcloud storage rm --recursive "gs://{{ item }}"
+  # - name: gcloud set project
+  #   command: gcloud config set project "{{ terraform_state_project }}"
+  #   when: not create_buckets_with_ansible
 
-      else
+  # # create buckets for terraform state
 
-        echo bucket "gs://{{ item }}" is not present 
+  # - name: create storage bucket with gcloud cli (when create_buckets_with_ansible = false )
+  #   shell: |
+  #     if gcloud storage ls | grep -q "{{ item }}"; then
+  #       echo bucket "gs://{{ item }}" is already present, so skipping this step
+  #     else
+  #       echo bucket "gs://{{ item }}" is not present, so creating it 
+  #       gcloud storage buckets create "gs://{{ item }}" --project="{{ terraform_state_project }}" --location="{{ bucket_location }}" --uniform-bucket-level-access
+  #     fi
+  #   when: (not create_buckets_with_ansible) and (desired_state == 'present')
+  #   register: buckets_output
+  #   loop:
+  #     - "{{ dev_bucket }}"
+  #     - "{{ staging_bucket }}"
+  #     - "{{ production_bucket }}"
 
-      fi
-    when: (not create_buckets_with_ansible) and (desired_state == 'absent')
-    register: buckets_output
-    loop:
-      - "{{ dev_bucket }}"
-      - "{{ staging_bucket }}"
-      - "{{ production_bucket }}"
+  # - name: "create storage bucket output"
+  #   debug:
+  #     msg: "{{ item.stdout_lines|join('') }}"
+  #   loop: "{{ buckets_output.results }}"
+  #   when: (not create_buckets_with_ansible) and (desired_state == 'present')
 
-  - name: "delete storage bucket output"
-    debug:
-      msg: "{{ item.stdout_lines|join('') }}"
-    loop: "{{ buckets_output.results }}"
-    when: (not create_buckets_with_ansible) and (desired_state == 'absent')
 
-    # ###########  End Section 2 ###########
+  # # delete buckets for terraform state
+
+  # - name: delete storage bucket with gcloud cli (when create_buckets_with_ansible = false )
+  #   shell: |
+  #     if gcloud storage ls | grep -q "{{ item }}"; then
+
+  #       echo bucket "gs://{{ item }}" is present, so deleting it
+  #       gcloud storage rm --recursive "gs://{{ item }}"
+
+  #     else
+
+  #       echo bucket "gs://{{ item }}" is not present 
+
+  #     fi
+  #   when: (not create_buckets_with_ansible) and (desired_state == 'absent')
+  #   register: buckets_output
+  #   loop:
+  #     - "{{ dev_bucket }}"
+  #     - "{{ staging_bucket }}"
+  #     - "{{ production_bucket }}"
+
+  # - name: "delete storage bucket output"
+  #   debug:
+  #     msg: "{{ item.stdout_lines|join('') }}"
+  #   loop: "{{ buckets_output.results }}"
+  #   when: (not create_buckets_with_ansible) and (desired_state == 'absent')
+
+  #   # ###########  End Section 2 ###########
 
 
 
