@@ -28,11 +28,11 @@ ARG ANSIBLE_VERSION=2.7.0-r1
 ENV GCP_PROJECT=${PROJECT_ID}
 
 
-#ENV GCP_AUTH_KIND=serviceaccount
+ENV GCP_AUTH_KIND=serviceaccount
 #ENV GCP_SERVICE_ACCOUNT_FILE='/usr/bin/ansible_key.json'
-#ENV GOOGLE_IMPERSONATE_SERVICE_ACCOUNT="ansible-new-account@abhinav-scrum-project.iam.gserviceaccount.com"
+ENV GOOGLE_IMPERSONATE_SERVICE_ACCOUNT="ansible-new-account@abhinav-scrum-project.iam.gserviceaccount.com"
 #ENV GCP_SCOPES='https://www.googleapis.com/auth/bigquery,https://www.googleapis.com/auth/devstorage.full_control,https://www.googleapis.com/auth/devstorage.read_write,https://www.googleapis.com/auth/bigquery.insertdata'
-#ENV GCP_STATE_BUCKET=${PROJECT_ID}+"-tfstate"
+ENV GCP_STATE_BUCKET=${PROJECT_ID}+"-tfstate"
 
 #updated for gcloud CLI dependencies
 RUN apk add --update python3 python3-dev py3-pip curl which bash && \
