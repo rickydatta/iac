@@ -13,8 +13,8 @@ steps:
   args:
   - ansible_project_setup.yaml
 
-options:
-  logging: CLOUD_LOGGING_ONLY
+# options:
+#   logging: CLOUD_LOGGING_ONLY
 
 images:
 - 'gcr.io/$PROJECT_ID/ansible'
